@@ -19,17 +19,11 @@ O fluxo segue as camadas `raw`, `refined` e `marts`:
 raw/ds_salaries.csv
         │
         ▼
-raw.salarios ── raw.cargos
-        │
-        ▼
-refined.salarios
-        │
-        ▼
-┌───────────────────────────────┐
-│ marts.salario_por_cargo       │
-│ marts.salario_por_experiencia │
-│ marts.salario_por_pais        │
-└───────────────────────────────┘
+raw.salarios ───────────────┐
+        │                   ├─ JOIN (job_title) ──> marts.salario_por_cargo
+        ├──> refined.salarios                     ├─> marts.salario_por_experiencia
+        │                                         └─> marts.salario_por_pais
+raw.cargos ─────────────────┘
 ```
 
 ### Raw
@@ -58,18 +52,24 @@ A transformação não modifica as tabelas da camada raw.
 
 ### Marts
 
-As tabelas de marts agregam `refined.salarios` por dimensões diferentes e usam
+As tabelas de marts agregam os salários por dimensões diferentes e usam
 `salary_in_usd` como medida de salário:
 
-- `marts.salario_por_cargo`: uma linha por `job_title`, com `salario_medio_usd`
-  e `quantidade_vagas`;
-- `marts.salario_por_experiencia`: uma linha por `experience_level`, com
-  `salario_medio_usd`;
-- `marts.salario_por_pais`: uma linha por `company_location`, com
-  `salario_medio_usd`.
+- `marts.salario_por_cargo`: faz `INNER JOIN` entre `raw.salarios` e
+  `raw.cargos` por `job_title`; gera uma linha por `id_cargo`, com
+  `job_title`, `salario_medio_usd` e `quantidade_vagas`;
+- `marts.salario_por_experiencia`: agrega `refined.salarios` por
+  `experience_level`, com `salario_medio_usd`;
+- `marts.salario_por_pais`: agrega `refined.salarios` por `company_location`,
+  com `salario_medio_usd`.
 
 `quantidade_vagas` representa a quantidade de registros salariais agregados por
 cargo.
+
+O gráfico `salario_por_pais.png` exibe os 10 países com maior média salarial,
+em ordem decrescente, usando nomes completos em vez de códigos.
+No gráfico `salario_por_experiencia.png`, os códigos de experiência são
+apresentados como Executivo, Sênior, Pleno e Iniciante.
 
 ## Requisitos
 
@@ -103,7 +103,7 @@ python -m pipeline.ingestao
 # Cria refined.salarios a partir de raw.salarios
 python -c "from pipeline.refinamento import refinar_salarios; print(refinar_salarios())"
 
-# Cria marts.salario_por_cargo a partir de refined.salarios
+# Cria marts.salario_por_cargo juntando raw.salarios e raw.cargos
 python -c "from pipeline.marts import criar_salario_por_cargo; print(criar_salario_por_cargo())"
 
 # Cria as médias por experiência e localização da empresa
@@ -163,3 +163,10 @@ temporários. Também verificam a geração dos três arquivos PNG.
 ├── pyproject.toml
 └── README.md
 ```
+
+## Como eu conferi
+
+O projeto foi desenvolvido por mim, com apoio de IA para agilizar o código. Eu
+validei cada etapa: conferi as tabelas, os JOINs e os resultados dos testes. Por
+exemplo, a IA indicou inicialmente apenas 1 tabela, mas ao conferir, identifiquei
+2 tabelas (salarios e cargos) e corrigi o JOIN entre elas.
