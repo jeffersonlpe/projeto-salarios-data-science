@@ -1,7 +1,8 @@
 # Pipeline de Dados Salariais
 
 Pipeline de engenharia de dados para transformar registros salariais de um CSV
-em tabelas organizadas para análise. O projeto usa Python, pandas e DuckDB.
+em tabelas organizadas para análise e gerar visualizações. O projeto usa Python,
+pandas, DuckDB e Matplotlib.
 
 ## Objetivo
 
@@ -108,12 +109,17 @@ python -c "from pipeline.marts import criar_salario_por_cargo; print(criar_salar
 # Cria as médias por experiência e localização da empresa
 python -c "from pipeline.marts import criar_salario_por_experiencia; print(criar_salario_por_experiencia())"
 python -c "from pipeline.marts import criar_salario_por_pais; print(criar_salario_por_pais())"
+
+# Gera os três gráficos PNG em graficos/
+python -m pipeline.graficos
 ```
 
 Por padrão, o banco DuckDB é criado como `salarios.duckdb` na raiz do projeto.
 As etapas usam `CREATE OR REPLACE`: ao executá-las novamente, as tabelas de
 destino são substituídas pelo resultado mais recente. A ingestão substitui
 `raw.salarios` e `raw.cargos`.
+O comando de gráficos lê os três marts existentes e salva seus arquivos PNG na
+pasta `graficos/`, criada automaticamente.
 
 ## Testes
 
@@ -126,7 +132,7 @@ python -m pytest -q
 Os testes verificam a ingestão do CSV real e a relação entre salários e cargos,
 a limpeza e tipagem da camada refined, e as médias e contagens agregadas por
 cargo, experiência e localização em marts. Os bancos usados pelos testes são
-temporários.
+temporários. Também verificam a geração dos três arquivos PNG.
 
 ## Estrutura do projeto
 
@@ -138,6 +144,7 @@ temporários.
 │   ├── ingestao.py
 │   ├── refinamento.py
 │   ├── marts.py
+│   ├── graficos.py
 │   └── sql/
 │       ├── refined/
 │       │   └── salarios.sql
@@ -150,7 +157,9 @@ temporários.
 ├── tests/
 │   ├── test_ingestao.py
 │   ├── test_refinamento.py
-│   └── test_marts.py
+│   ├── test_marts.py
+│   └── test_graficos.py
+├── graficos/  # criada ao executar pipeline.graficos; contém os PNGs gerados
 ├── pyproject.toml
 └── README.md
 ```
