@@ -14,9 +14,13 @@ _SQL_PATH = (
 _SQL_DIRECTORY = Path(__file__).resolve().parent / "sql" / "marts"
 
 
-def criar_salario_por_cargo() -> int:
+def criar_salario_por_cargo(caminho_banco: str | Path | None = None) -> int:
     """Cria o mart agregado de salário médio e vagas por cargo."""
-    conexao = conectar()
+    conexao = (
+        conectar(caminho_banco)
+        if caminho_banco is not None
+        else conectar()
+    )
     try:
         criar_schema(conexao)
         conexao.execute(_SQL_PATH.read_text(encoding="utf-8"))
@@ -27,9 +31,15 @@ def criar_salario_por_cargo() -> int:
         conexao.close()
 
 
-def criar_salario_por_experiencia() -> int:
+def criar_salario_por_experiencia(
+    caminho_banco: str | Path | None = None,
+) -> int:
     """Cria o mart de salário médio por nível de experiência."""
-    conexao = conectar()
+    conexao = (
+        conectar(caminho_banco)
+        if caminho_banco is not None
+        else conectar()
+    )
     try:
         criar_schema(conexao)
         conexao.execute(
@@ -44,9 +54,15 @@ def criar_salario_por_experiencia() -> int:
         conexao.close()
 
 
-def criar_salario_por_pais() -> int:
+def criar_salario_por_pais(
+    caminho_banco: str | Path | None = None,
+) -> int:
     """Cria o mart de salário médio por localização da empresa."""
-    conexao = conectar()
+    conexao = (
+        conectar(caminho_banco)
+        if caminho_banco is not None
+        else conectar()
+    )
     try:
         criar_schema(conexao)
         conexao.execute(
@@ -61,9 +77,15 @@ def criar_salario_por_pais() -> int:
         conexao.close()
 
 
-def criar_salarios_por_perfil() -> int:
+def criar_salarios_por_perfil(
+    caminho_banco: str | Path | None = None,
+) -> int:
     """Cria o mart detalhado por cargo, experiência e tamanho da empresa."""
-    conexao = conectar()
+    conexao = (
+        conectar(caminho_banco)
+        if caminho_banco is not None
+        else conectar()
+    )
     try:
         criar_schema(conexao)
         conexao.execute(

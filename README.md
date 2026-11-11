@@ -77,7 +77,8 @@ apresentados como Executivo, Sênior, Pleno e Iniciante.
 ## Requisitos
 
 - Python 3.10 ou superior
-- Dependências declaradas em `pyproject.toml`
+- Dependências locais declaradas em `pyproject.toml`
+- Dependências para deploy no Streamlit Cloud em `requirements.txt`
 
 ## Instalação
 
@@ -87,6 +88,12 @@ Na raiz do repositório, crie e ative um ambiente virtual e instale o projeto:
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -e .
+```
+
+Para instalar apenas as dependências de execução do dashboard:
+
+```powershell
+python -m pip install -r requirements.txt
 ```
 
 No macOS ou Linux, ative o ambiente com:
@@ -123,14 +130,24 @@ python -m pipeline.graficos
 streamlit run dashboard.py
 ```
 
-Por padrão, o banco DuckDB é criado como `salarios.duckdb` na raiz do projeto.
-As etapas usam `CREATE OR REPLACE`: ao executá-las novamente, as tabelas de
-destino são substituídas pelo resultado mais recente. A ingestão substitui
-`raw.salarios` e `raw.cargos`.
+Por padrão, as etapas do pipeline executadas pela linha de comando criam o
+banco DuckDB como `salarios.duckdb` na raiz do projeto. Elas também aceitam um
+caminho alternativo para o banco. As etapas usam `CREATE OR REPLACE`: ao
+executá-las novamente, as tabelas de destino são substituídas pelo resultado
+mais recente. A ingestão substitui `raw.salarios` e `raw.cargos`.
 O comando de gráficos lê os três marts existentes e salva seus arquivos PNG na
 pasta `graficos/`, criada automaticamente.
 O dashboard lê apenas `marts.salarios_por_perfil`; os filtros, indicadores e
-agregações são executados no DuckDB.
+agregações são executados no DuckDB. Ao iniciar, ele gera as camadas necessárias
+a partir do CSV versionado e guarda o DuckDB em um arquivo temporário do sistema,
+sem depender de `salarios.duckdb` local.
+
+## Deploy no Streamlit Cloud
+
+Configure o arquivo principal como `dashboard.py`. O Cloud instalará as
+dependências de `requirements.txt`; o dashboard lê `raw/ds_salaries.csv` e
+prepara automaticamente as tabelas necessárias em um DuckDB temporário.
+Não é necessário versionar nem enviar um arquivo `.duckdb`.
 
 ## Testes
 
@@ -165,6 +182,7 @@ temporários. Também verificam a geração dos três arquivos PNG.
 │           ├── salario_por_pais.sql
 │           └── salarios_por_perfil.sql
 ├── dashboard.py
+├── requirements.txt
 ├── raw/
 │   └── ds_salaries.csv
 ├── tests/

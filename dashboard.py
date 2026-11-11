@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import tempfile
 from pathlib import Path
 
 import duckdb
@@ -7,8 +8,12 @@ import matplotlib.pyplot as plt
 import streamlit as st
 from matplotlib.ticker import FuncFormatter
 
+from pipeline.ingestao import ingerir
+from pipeline.marts import criar_salarios_por_perfil
+from pipeline.refinamento import refinar_salarios
 
-_DATABASE_PATH = Path(__file__).resolve().parent / "salarios.duckdb"
+_PROJECT_ROOT = Path(__file__).resolve().parent
+_CSV_PATH = _PROJECT_ROOT / "raw" / "ds_salaries.csv"
 _EXPERIENCE_LABELS = {
     "EN": "Iniciante",
     "MI": "Pleno",
@@ -20,6 +25,36 @@ _COMPANY_SIZE_LABELS = {
     "M": "Média (M)",
     "L": "Grande (L)",
 }
+
+
+def _construir_banco_dashboard(
+    caminho_banco: str | Path,
+    arquivo_csv: str | Path = _CSV_PATH,
+) -> None:
+    ingerir(arquivo_csv, caminho_banco=caminho_banco)
+    refinar_salarios(caminho_banco=caminho_banco)
+    criar_salarios_por_perfil(caminho_banco=caminho_banco)
+
+
+def _caminho_banco_temporario(
+    diretorio: str | Path | None = None,
+) -> Path:
+    with tempfile.NamedTemporaryFile(
+        prefix="salarios-dashboard-",
+        suffix=".duckdb",
+        dir=diretorio,
+        delete=False,
+    ) as arquivo_temporario:
+        caminho_banco = Path(arquivo_temporario.name)
+    caminho_banco.unlink()
+    return caminho_banco
+
+
+@st.cache_resource
+def _preparar_banco_dashboard() -> str:
+    caminho_banco = _caminho_banco_temporario()
+    _construir_banco_dashboard(caminho_banco)
+    return str(caminho_banco)
 
 
 def _where_clause(
@@ -162,14 +197,14 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
-    if not _DATABASE_PATH.is_file():
+    if not _CSV_PATH.is_file():
         st.error(
-            "O banco salarios.duckdb não foi encontrado. Execute o pipeline "
-            "e crie marts.salarios_por_perfil antes de abrir o dashboard."
+            f"O CSV de dados não foi encontrado: {_CSV_PATH}"
         )
         return
 
-    conexao = duckdb.connect(str(_DATABASE_PATH), read_only=True)
+    caminho_banco = _preparar_banco_dashboard()
+    conexao = duckdb.connect(caminho_banco, read_only=True)
     try:
         try:
             conexao.execute(

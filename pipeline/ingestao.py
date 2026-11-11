@@ -11,7 +11,10 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 _CSV_PATH = _PROJECT_ROOT / "raw" / "ds_salaries.csv"
 
 
-def ingerir(arquivo: str | Path = _CSV_PATH) -> int:
+def ingerir(
+    arquivo: str | Path = _CSV_PATH,
+    caminho_banco: str | Path | None = None,
+) -> int:
     """Lê o CSV e substitui raw.salarios e raw.cargos."""
     dados = pd.read_csv(arquivo)
     cargos = (
@@ -22,7 +25,11 @@ def ingerir(arquivo: str | Path = _CSV_PATH) -> int:
     )
     cargos.insert(0, "id_cargo", range(1, len(cargos) + 1))
 
-    conexao = conectar()
+    conexao = (
+        conectar(caminho_banco)
+        if caminho_banco is not None
+        else conectar()
+    )
     try:
         criar_schema(conexao)
         gravar(dados, "salarios", schema="raw", conexao=conexao)

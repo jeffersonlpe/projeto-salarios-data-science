@@ -2,10 +2,30 @@ import matplotlib
 
 matplotlib.use("Agg")
 
+import duckdb
 import pandas as pd
 import pytest
 
 import dashboard
+
+
+def test_banco_do_dashboard_e_criado_do_csv_em_caminho_independente(tmp_path):
+    caminho_banco = dashboard._caminho_banco_temporario(tmp_path)
+    assert not caminho_banco.exists()
+
+    dashboard._construir_banco_dashboard(caminho_banco)
+
+    conexao = duckdb.connect(str(caminho_banco), read_only=True)
+    try:
+        quantidade = conexao.execute(
+            "SELECT COUNT(*) FROM marts.salarios_por_perfil"
+        ).fetchone()[0]
+        assert quantidade > 0
+        assert conexao.execute(
+            "SELECT COUNT(*) FROM raw.salarios"
+        ).fetchone()[0] == 3755
+    finally:
+        conexao.close()
 
 
 def test_graficos_do_dashboard_mantem_proporcao_e_espaco_para_rotulos(monkeypatch):
