@@ -10,7 +10,9 @@ dependencies = [
     "duckdb",
     "matplotlib>=3.8",
     "pandas",
+    "pycountry>=24.6.1",
     "pytest",
+    "streamlit>=1.40",
 ]
 
 [tool.pytest.ini_options]

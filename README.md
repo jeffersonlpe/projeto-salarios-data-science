@@ -62,6 +62,9 @@ As tabelas de marts agregam os salários por dimensões diferentes e usam
   `experience_level`, com `salario_medio_usd`;
 - `marts.salario_por_pais`: agrega `refined.salarios` por `company_location`,
   com `salario_medio_usd`.
+- `marts.salarios_por_perfil`: agrega por cargo, experiência e tamanho da
+  empresa, incluindo média, maior salário e quantidade de vagas. Esse mart
+  alimenta o dashboard e seus filtros.
 
 `quantidade_vagas` representa a quantidade de registros salariais agregados por
 cargo.
@@ -110,8 +113,14 @@ python -c "from pipeline.marts import criar_salario_por_cargo; print(criar_salar
 python -c "from pipeline.marts import criar_salario_por_experiencia; print(criar_salario_por_experiencia())"
 python -c "from pipeline.marts import criar_salario_por_pais; print(criar_salario_por_pais())"
 
+# Cria o mart detalhado usado pelo dashboard
+python -c "from pipeline.marts import criar_salarios_por_perfil; print(criar_salarios_por_perfil())"
+
 # Gera os três gráficos PNG em graficos/
 python -m pipeline.graficos
+
+# Inicia o dashboard interativo
+streamlit run dashboard.py
 ```
 
 Por padrão, o banco DuckDB é criado como `salarios.duckdb` na raiz do projeto.
@@ -120,6 +129,8 @@ destino são substituídas pelo resultado mais recente. A ingestão substitui
 `raw.salarios` e `raw.cargos`.
 O comando de gráficos lê os três marts existentes e salva seus arquivos PNG na
 pasta `graficos/`, criada automaticamente.
+O dashboard lê apenas `marts.salarios_por_perfil`; os filtros, indicadores e
+agregações são executados no DuckDB.
 
 ## Testes
 
@@ -151,7 +162,9 @@ temporários. Também verificam a geração dos três arquivos PNG.
 │       └── marts/
 │           ├── salario_por_cargo.sql
 │           ├── salario_por_experiencia.sql
-│           └── salario_por_pais.sql
+│           ├── salario_por_pais.sql
+│           └── salarios_por_perfil.sql
+├── dashboard.py
 ├── raw/
 │   └── ds_salaries.csv
 ├── tests/

@@ -59,3 +59,20 @@ def criar_salario_por_pais() -> int:
         ).fetchone()[0]
     finally:
         conexao.close()
+
+
+def criar_salarios_por_perfil() -> int:
+    """Cria o mart detalhado por cargo, experiência e tamanho da empresa."""
+    conexao = conectar()
+    try:
+        criar_schema(conexao)
+        conexao.execute(
+            (_SQL_DIRECTORY / "salarios_por_perfil.sql").read_text(
+                encoding="utf-8"
+            )
+        )
+        return conexao.execute(
+            "SELECT COUNT(*) FROM marts.salarios_por_perfil"
+        ).fetchone()[0]
+    finally:
+        conexao.close()
