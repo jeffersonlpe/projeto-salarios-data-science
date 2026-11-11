@@ -1,8 +1,14 @@
 # Pipeline de Dados Salariais
 
-Pipeline de engenharia de dados que carrega dados de salários de um CSV,
-organiza-os em camadas analíticas e publica tabelas agregadas para análise.
-O projeto usa Python, pandas e DuckDB.
+Pipeline de engenharia de dados para transformar registros salariais de um CSV
+em tabelas organizadas para análise. O projeto usa Python, pandas e DuckDB.
+
+## Objetivo
+
+Preservar os dados de origem, preparar uma versão limpa e tipada para consulta e
+gerar agregações que permitam analisar salários por cargo, nível de experiência
+e país de localização da empresa. As médias são calculadas em dólares
+americanos para evitar misturar moedas diferentes.
 
 ## Arquitetura
 
@@ -29,10 +35,13 @@ refined.salarios
 
 Camada de entrada, carregada de `raw/ds_salaries.csv`:
 
-- `raw.salarios`: dados do CSV, preservando as colunas originais.
-- `raw.cargos`: cargos distintos, com `id_cargo` e `job_title`.
+- `raw.salarios`: registros do CSV, preservando as colunas e os valores de
+  origem. Cada registro representa uma observação salarial.
+- `raw.cargos`: uma linha por cargo distinto, com `id_cargo` sequencial e
+  `job_title`.
 
-As tabelas podem ser relacionadas por `job_title`.
+As duas tabelas podem ser relacionadas por `job_title`. `raw.salarios` mantém a
+estrutura original do CSV e não recebe uma coluna de ID de cargo.
 
 ### Refined (Silver)
 
@@ -48,16 +57,18 @@ A transformação não modifica as tabelas da camada raw.
 
 ### Marts
 
-As tabelas de marts agregam `refined.salarios` por dimensões diferentes:
+As tabelas de marts agregam `refined.salarios` por dimensões diferentes e usam
+`salary_in_usd` como medida de salário:
 
-- `marts.salario_por_cargo`: média de salário e quantidade de registros por
-  `job_title`;
-- `marts.salario_por_experiencia`: média de salário por `experience_level`;
-- `marts.salario_por_pais`: média de salário por `company_location`.
+- `marts.salario_por_cargo`: uma linha por `job_title`, com `salario_medio_usd`
+  e `quantidade_vagas`;
+- `marts.salario_por_experiencia`: uma linha por `experience_level`, com
+  `salario_medio_usd`;
+- `marts.salario_por_pais`: uma linha por `company_location`, com
+  `salario_medio_usd`.
 
-As médias são calculadas com `salary_in_usd` e expostas como
-`salario_medio_usd`, permitindo comparar salários sem misturar moedas de origem
-diferentes. A tabela por cargo também inclui `quantidade_vagas`.
+`quantidade_vagas` representa a quantidade de registros salariais agregados por
+cargo.
 
 ## Requisitos
 
@@ -122,6 +133,7 @@ temporários.
 ```text
 .
 ├── pipeline/
+│   ├── __init__.py
 │   ├── db.py
 │   ├── ingestao.py
 │   ├── refinamento.py
@@ -139,5 +151,6 @@ temporários.
 │   ├── test_ingestao.py
 │   ├── test_refinamento.py
 │   └── test_marts.py
-└── pyproject.toml
+├── pyproject.toml
+└── README.md
 ```
