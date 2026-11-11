@@ -22,7 +22,12 @@ def test_ingerir_cria_cargos_e_mantem_join_com_csv_real(monkeypatch, tmp_path):
         salarios = conexao.execute("SELECT * FROM raw.salarios").df()
         cargos = conexao.execute("SELECT * FROM raw.cargos").df()
         assert salarios.columns.tolist() == dados_origem.columns.tolist()
-        assert len(salarios) == len(dados_origem)
+        colunas_salarios = dados_origem.columns.tolist()
+        pd.testing.assert_frame_equal(
+            salarios.sort_values(colunas_salarios).reset_index(drop=True),
+            dados_origem.sort_values(colunas_salarios).reset_index(drop=True),
+            check_dtype=False,
+        )
         assert cargos.columns.tolist() == ["id_cargo", "job_title"]
         assert cargos["id_cargo"].is_unique
         assert cargos["job_title"].is_unique
